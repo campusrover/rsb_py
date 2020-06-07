@@ -1,10 +1,13 @@
-def hello(message):
-    print(f"Hello {message}")
-
-def callb(f,a):
-    f(a)
+from rsb.script import Script
 
 
-callb(hello, "fpp")
-callb(hello, "xx")
+class MyRobot(Script):
+    def setup(self):
+        self.namespace("pito")
+        self.worldsize((10, 10))
 
+    def step(self):
+        print("run")
+
+r = MyRobot()
+r.run()

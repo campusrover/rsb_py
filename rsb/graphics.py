@@ -16,7 +16,7 @@ class Graphics(object):
         pygame.init()
         self.fpsClock = pygame.time.Clock()
 
-    # size: {"width": 5, "height": 5} - in meters
+    # size: {"width": 10, "height": 10} - in meters
     def setup(self, size):
         self.scale = 100
         self.dimensions = (size["width"] * self.scale, size["height"] * self.scale)
@@ -54,9 +54,28 @@ class Graphics(object):
                     sys.exit()
             pygame.display.update()
             self.fpsClock.tick(1)
+    
+    def main_loop_once(self):
+        self.draw_background()
+        self.draw_grid()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+        pygame.display.update()
+        self.fpsClock.tick(1)
+
+    def draw_walls_once(self, walls):
+        print(f"draw_walls-{rd.randrange(10)}")
+        i = 0
+        for wall in walls:
+            print(f"w{i}")
+            i += 1
+            self.scaled_draw_line(wall)
 
     def scaled_draw_line(self,wall):
         ends = self.scale_line(wall)
+        print(f"scaled_draw_line")
         pygame.draw.line(self.surface, BLACK, ends[0], ends[1], 5)
         #pygame.draw.line(self.surface, BLACK, [50,50], [100,100], 5)
 

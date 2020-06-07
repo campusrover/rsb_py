@@ -21,6 +21,7 @@ class World(object):
             for l in json_state["data"]:
                 self.walls.append(l)
             self.id = json_state["id"]
-
+        return self.walls
+        
     def __repr__(self):
         return f"World: walls: {self.wall_count()}, id: {self.id}"
