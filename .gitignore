@@ -1,5 +1,7 @@
-.pytest_cache__/*
-.mypy_cache/*
+.pytest_cache
+.mypy_cache
+.ipynb_checkpoints
 *.pyc
-rsb/*/*.pyc
+rsb/__pycache__
+
 
