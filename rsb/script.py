@@ -11,20 +11,18 @@ class Script(object):
     def run(self):
         self.setup()
         self.post_setup()
-        for x in range(100):
+        while True:
             self.gr.draw_background()
             self.gr.draw_grid()
 
             raw_map = self.rutil.get_next_map()
             world = World()
             world.rebuild(raw_map)
-            print(f"callback {raw_map['id']}")
             i = 0
             for wall in world.walls:
-                print(f"w{i}")
                 i += 1
                 self.gr.scaled_draw_line(wall)
-                self.gr.draw_robot()
+            self.gr.draw_robot()
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -32,15 +30,8 @@ class Script(object):
             pygame.display.update()
             self.gr.fpsClock.tick(2)
   
-            # self.step()
-            # self.raw_map = self.rutil.get_next_map()
-            # self.world = World()
-            # self.walls = self.world.rebuild(self.raw_map)
-            # self.gr.draw_walls_once(self.walls)
-            # self.gr.main_loop_once()
-
     def setup(self):
-        print(self.ns)
+        pass
 
     def step(self):
         pass

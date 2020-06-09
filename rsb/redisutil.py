@@ -4,10 +4,11 @@ import json
 class RedisUtil(object):
     def __init__(self, ns):
         self.ns = ns
+        self.last_id = 0
         self.redishandle = redis.Redis(
             host="redis-10221.c10.us-east-1-3.ec2.cloud.redislabs.com",
             port=10221,
-            password="ROSlab134",
+            password="ROSlab134"
         )
 
     def clients(self):
@@ -25,6 +26,19 @@ class RedisUtil(object):
         return rez
 
     def get_next_map(self):
-        raw_bytes = self.redishandle.brpop(self.ns + "/Map")
-        rez = json.loads(str(raw_bytes[1].decode("utf8")))
+        while True:
+            self.redishandle.ltrim(self.ns + "/Map", -10, -1)
+            raw_bytes = self.redishandle.lrange(self.ns + "/Map", -1, -1)
+            rez = json.loads(str(raw_bytes[0].decode("utf8")))
+            print(f"applying {rez['id']}")
+            if rez["id"] >= self.last_id:
+                break
+            print(f"dumping {rez['id']}")
+            self.last_id = rez["id"]
+        self.last_id = rez["id"]
         return rez
+
+    def reset(self):
+        self.redishandle.set(self.ns + "Bridge_Reset")
+        self.last_id = 0
+    

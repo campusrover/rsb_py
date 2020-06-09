@@ -34,11 +34,9 @@ class Graphics(object):
         pass
 
     def draw_walls(self, cb, arg):
-        print(f"draw_walls-{rd.randrange(10)}")
         walls = cb(arg).copy()
         i = 0
         for wall in walls:
-            print(f"w{i}")
             i += 1
             self.scaled_draw_line(wall)
         
@@ -66,17 +64,14 @@ class Graphics(object):
         self.fpsClock.tick(1)
 
     def draw_walls_once(self, walls):
-        print(f"draw_walls-{rd.randrange(10)}")
         i = 0
         for wall in walls:
-            print(f"w{i}")
             i += 1
             self.scaled_draw_line(wall)
 
     def scaled_draw_line(self,wall):
         ends = self.scale_line(wall)
-        print(f"scaled_draw_line")
-        pygame.draw.line(self.surface, BLACK, ends[0], ends[1], 5)
+        pygame.draw.line(self.surface, BLACK, ends[0], ends[1], 2)
         #pygame.draw.line(self.surface, BLACK, [50,50], [100,100], 5)
 
     def scale_line(self, points):

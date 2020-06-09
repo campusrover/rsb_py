@@ -1,6 +1,5 @@
 from rsb.script import Script
 
-
 class MyRobot(Script):
     def setup(self):
         self.namespace("pito")
