@@ -1,12 +1,11 @@
 from rsb.script import Script
 
-class MyRobot(Script):
+class MyScript(Script):
     def setup(self):
-        self.namespace("pito")
-        self.worldsize((10, 10))
+        pass
 
     def step(self):
-        print("run")
+        print("step")
 
-r = MyRobot()
+r = MyScript("pito", (10,10), (5,5))
 r.run()

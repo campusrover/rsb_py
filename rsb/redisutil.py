@@ -41,4 +41,9 @@ class RedisUtil(object):
     def reset(self):
         self.redishandle.set(self.ns + "Bridge_Reset")
         self.last_id = 0
-    
+
+    def get_robot_info(self):
+        raw_bytes = self.redishandle.get(self.ns + "/Odom")
+        rez = json.loads(str(raw_bytes.decode("utf8")))
+        return rez
+        

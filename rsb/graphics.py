@@ -1,37 +1,83 @@
-import pygame
+import pygame as pg
 import os
 import sys
 from pygame.locals import *
 import random as rd
+import math
 
 # Define some colors
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 GREEN = (0, 255, 0)
 RED = (255, 0, 0)
+GRID_COLOR = (80, 130, 220)
+BACKROUND_COLOR = (100, 150, 240)
 
 
 class Graphics(object):
     def __init__(self):
-        pygame.init()
-        self.fpsClock = pygame.time.Clock()
+        pg.init()
+        self.fpsClock = pg.time.Clock()
+        self.all_sprites = pg.sprite.Group()
 
     # size: {"width": 10, "height": 10} - in meters
     def setup(self, size):
         self.scale = 100
         self.dimensions = (size["width"] * self.scale, size["height"] * self.scale)
-        print(self.dimensions)
-        self.surface = pygame.display.set_mode(self.dimensions)
-        self.background = pygame.Color(100, 149, 237) 
+        self.surface = pg.display.set_mode(self.dimensions)
+        self.background = pg.Color(100, 149, 237)
+        self.gridlines = []
+
+    def origin(self, origin):
+        self.origin = (origin[0] * self.scale, origin[1] * self.scale)
 
     def draw_grid(self):
-        pass
+        for line in self.gridlines:
+            pg.draw.aaline(self.surface, GRID_COLOR, (line[0], line[1]), (line[2], line[3]))
+
+    def recompute_gridlines(self):
+        self.gridlines = []
+        self.calc_vertical_gridlines()
+        self.calc_horizontal_gridlines()
+
+    def calc_vertical_gridlines(self):
+        # verical grid lines go from y=0 to y=self.dimensions[1]
+        # .. and from x=self.origin[0] +/- scale until they are either below zero or above self.dimensions[0]
+        xloops = math.ceil(self.dimensions[0] / self.scale)
+        for x in range(xloops):
+            inc = x * self.scale
+            self.gridlines.append(
+                [inc + self.origin[0], 0, inc + self.origin[0], self.dimensions[0]]
+            )
+            self.gridlines.append(
+                [-inc + self.origin[0], 0, -inc + self.origin[0], self.dimensions[0]]
+            )
+
+    def calc_horizontal_gridlines(self):
+        # horizontal grid lines go from x=0 to x=self.dimesnions[0]
+        # .. and from y=self.origin[1] +/- scale until they are either below zero or above self.dimensions[1]
+        xloops = math.ceil(self.dimensions[1] / self.scale)
+        for x in range(xloops):
+            inc = x * self.scale
+            self.gridlines.append(
+                [0, inc + self.origin[1], self.dimensions[0], inc + self.origin[1]]
+            )
+            self.gridlines.append(
+                [0, -inc + self.origin[1], self.dimensions[1], -inc + self.origin[1]]
+            )
+
+    def update_graphics(self):
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
+                sys.exit()
+        pg.display.update()
 
     def draw_background(self):
         self.surface.fill(self.background)
-    
+
     def draw_robot(self):
-        pass
+        self.all_sprites.update()
 
     def draw_walls(self, cb, arg):
         walls = cb(arg).copy()
@@ -39,29 +85,29 @@ class Graphics(object):
         for wall in walls:
             i += 1
             self.scaled_draw_line(wall)
-        
+
     def main_loop(self, wall_callback, arg):
         while True:
             self.draw_background()
             self.draw_grid()
             self.draw_walls(wall_callback, arg)
             self.draw_robot()
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    pg.quit()
                     sys.exit()
-            pygame.display.update()
+            pg.display.update()
             self.fpsClock.tick(1)
-    
+
     def main_loop_once(self):
         self.draw_background()
         self.draw_grid()
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
+        for event in pg.event.get():
+            if event.type == pg.QUIT:
+                pg.quit()
                 sys.exit()
-        pygame.display.update()
-        self.fpsClock.tick(1)
+        pg.display.update()
+        self.fpsClock.tick(1.0)
 
     def draw_walls_once(self, walls):
         i = 0
@@ -69,13 +115,62 @@ class Graphics(object):
             i += 1
             self.scaled_draw_line(wall)
 
-    def scaled_draw_line(self,wall):
-        ends = self.scale_line(wall)
-        pygame.draw.line(self.surface, BLACK, ends[0], ends[1], 2)
-        #pygame.draw.line(self.surface, BLACK, [50,50], [100,100], 5)
+    def scaled_draw_line(self, wall):
+        ends = self.scale_line((wall[0], wall[1]), (wall[2], wall[3]))
+        pg.draw.line(self.surface, BLACK, ends[0], ends[1], 5)
 
-    def scale_line(self, points):
-        return [self.sc_coord(points[0]), self.sc_coord(points[1])],[self.sc_coord(points[2]), self.sc_coord(points[3])]
+    def scale_line(self, beg, end):
+        return [self.sc_point(beg), (self.sc_point(end))]
 
-    def sc_coord(self, c):
-        return self.scale * (c + 5)
+    def sc_point(self, c):
+        return (c[0] * self.scale + self.origin[0], c[1] * self.scale + self.origin[1])
+
+    def sc_rect(self, r):
+        return Rect(self.sc_point((r[0], self.sc_point(r[1])), (r[1], r[2])))
+
+    def sc_draw_rect(self, rect, color):
+        pg.draw.rect(self.surface, color, self.sc_rect(rect))
+
+    def draw_all_sprites(self):
+        self.all_sprites.draw(self.surface)
+
+
+# For now just recreate the sprite each time and see if performance is bad
+    def sprite_location(self, idx, location):
+        location = self.sc_point(location)
+        if len(self.all_sprites) == 0:
+            self.all_sprites.add(Sprite(location))
+        else:
+            print(location)
+            self.all_sprites.sprites()[0].pos = location
+            # self.all_sprites.clear(self.surface,BACKROUND_COLOR )
+            # self.all_sprites.add(Sprite(location))
+
+# Rotatable image and movable image
+class Sprite(pg.sprite.Sprite):
+
+    def __init__(self, pos):
+        super().__init__()
+        self.image = pg.Surface((20, 40), pg.SRCALPHA)
+        pg.draw.polygon(self.image, pg.Color('red'),
+                        ((10, 0), (0, 40), (20, 40)))
+        # A reference to the original image to preserve the quality.
+        self.orig_image = self.image
+        self.pos = pos
+        self.rect = self.image.get_rect(center=self.pos)
+        self.angle = 0
+
+    def update(self):
+        self.rotate()
+        self.move()
+
+    def move(self):
+        self.rect = self.image.get_rect(center=self.pos)
+
+    def rotate(self):
+        """Rotate the image of the sprite around its center."""
+        # `rotozoom` usually looks nicer than `rotate`. Pygame's rotation
+        # functions return new images and don't modify the originals.
+        self.image = pg.transform.rotozoom(self.orig_image, self.angle, 1)
+        # Create a new rect with the center of the old rect.
+        self.rect = self.image.get_rect(center=self.rect.center)
