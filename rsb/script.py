@@ -68,6 +68,5 @@ class Script(object):
     def calc_robot(self):
         robot = Robot(self.rutil.get_robot_info())
         self.gr.sprite_location(0, robot.location)
-#        self.gr.sprite_location(0, (random.randint(0,3), random.randint(-3,3)))
         self.gr.draw_all_sprites()
 
