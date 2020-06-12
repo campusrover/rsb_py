@@ -27,10 +27,9 @@ class RedisUtil(object):
 
     def get_next_map(self):
         while True:
-            self.redishandle.ltrim(self.ns + "/Map", -10, -1)
+            # self.redishandle.ltrim(self.ns + "/Map", -10, -1)
             raw_bytes = self.redishandle.lrange(self.ns + "/Map", -1, -1)
             rez = json.loads(str(raw_bytes[0].decode("utf8")))
-            print(f"applying {rez['id']}")
             if rez["id"] >= self.last_id:
                 break
             print(f"dumping {rez['id']}")

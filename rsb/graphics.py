@@ -136,15 +136,13 @@ class Graphics(object):
 
 
 # For now just recreate the sprite each time and see if performance is bad
-    def sprite_location(self, idx, location):
+    def sprite_location(self, idx, location, orientation):
         location = self.sc_point(location)
         if len(self.all_sprites) == 0:
             self.all_sprites.add(Sprite(location))
         else:
-            print(location)
             self.all_sprites.sprites()[0].pos = location
-            # self.all_sprites.clear(self.surface,BACKROUND_COLOR )
-            # self.all_sprites.add(Sprite(location))
+            self.all_sprites.sprites()[0].angle = orientation
 
 # Rotatable image and movable image
 class Sprite(pg.sprite.Sprite):

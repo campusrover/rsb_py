@@ -5,7 +5,7 @@ class MyScript(Script):
         pass
 
     def step(self):
-        print("step")
-
+        pass
+    
 r = MyScript("pito", (10,10), (5,5))
 r.run()

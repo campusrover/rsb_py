@@ -1,3 +1,5 @@
+### NOT BEING USED ###
+
 from rsb.redisutil import RedisUtil
 from rsb.world import World
 from rsb.graphics import Graphics

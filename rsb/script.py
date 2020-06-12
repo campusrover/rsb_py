@@ -22,7 +22,7 @@ class Script(object):
             self.gr.draw_grid()
             self.step()
             self.draw_map()
-            self.calc_robot()
+            self.draw_robot()
             self.gr.draw_robot()
             self.gr.update_graphics()
             self.gr.fpsClock.tick(5)
@@ -65,8 +65,8 @@ class Script(object):
             i += 1
             self.gr.scaled_draw_line(wall)
 
-    def calc_robot(self):
+    def draw_robot(self):
         robot = Robot(self.rutil.get_robot_info())
-        self.gr.sprite_location(0, robot.location)
+        self.gr.sprite_location(0, robot.location, robot.orientation)
         self.gr.draw_all_sprites()
 
