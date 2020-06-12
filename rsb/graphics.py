@@ -5,15 +5,6 @@ from pygame.locals import *
 import random as rd
 import math
 
-# Define some colors
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
-GREEN = (0, 255, 0)
-RED = (255, 0, 0)
-GRID_COLOR = (80, 130, 220)
-BACKROUND_COLOR = (100, 150, 240)
-
-
 class Graphics(object):
     def __init__(self):
         pg.init()
@@ -25,7 +16,7 @@ class Graphics(object):
         self.scale = 100
         self.dimensions = (size["width"] * self.scale, size["height"] * self.scale)
         self.surface = pg.display.set_mode(self.dimensions)
-        self.background = pg.Color(100, 149, 237)
+        self.background = pg.Color("azure3")
         self.gridlines = []
 
     def origin(self, origin):
@@ -33,7 +24,7 @@ class Graphics(object):
 
     def draw_grid(self):
         for line in self.gridlines:
-            pg.draw.aaline(self.surface, GRID_COLOR, (line[0], line[1]), (line[2], line[3]))
+            pg.draw.aaline(self.surface, pg.Color("azure"), (line[0], line[1]), (line[2], line[3]))
 
     def recompute_gridlines(self):
         self.gridlines = []
@@ -117,7 +108,7 @@ class Graphics(object):
 
     def scaled_draw_line(self, wall):
         ends = self.scale_line((wall[0], wall[1]), (wall[2], wall[3]))
-        pg.draw.line(self.surface, BLACK, ends[0], ends[1], 5)
+        pg.draw.line(self.surface, pg.Color("black"), ends[0], ends[1], 5)
 
     def scale_line(self, beg, end):
         return [self.sc_point(beg), (self.sc_point(end))]
@@ -149,9 +140,10 @@ class Sprite(pg.sprite.Sprite):
 
     def __init__(self, pos):
         super().__init__()
-        self.image = pg.Surface((20, 40), pg.SRCALPHA)
-        pg.draw.polygon(self.image, pg.Color('red'),
-                        ((10, 0), (0, 40), (20, 40)))
+        # self.image = pg.Surface((20, 40), pg.SRCALPHA)
+        self.image = pg.image.load("robot1.png")
+        # pg.draw.polygon(self.image, pg.Color('red'),
+        #                 ((10, 0), (0, 40), (20, 40)))
         # A reference to the original image to preserve the quality.
         self.orig_image = self.image
         self.pos = pos
