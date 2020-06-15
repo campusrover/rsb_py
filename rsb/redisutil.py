@@ -1,5 +1,7 @@
 import redis
 import json
+import cProfile
+
 
 class RedisUtil(object):
     def __init__(self, ns):
@@ -43,6 +45,24 @@ class RedisUtil(object):
 
     def get_robot_info(self):
         raw_bytes = self.redishandle.get(self.ns + "/Odom")
-        rez = json.loads(str(raw_bytes.decode("utf8")))
-        return rez
-        
+        odom = json.loads(str(raw_bytes.decode("utf8")))
+        raw_bytes = self.redishandle.get(self.ns + "/Lidar")
+        lidar = json.loads(str(raw_bytes.decode("utf8")))
+        return {"odom": odom, "lidar": lidar}
+    
+
+if __name__ == "__main__":
+    def to_profile():
+        oldid = 0
+        for i in range(50):
+            m = r.get_next_map()
+            for i in range(5):
+                id = r.get_robot_info()["odom"]["time"]
+                if id != oldid:
+                    break
+            if oldid != id:
+                print(id)
+            oldid = id
+    r = RedisUtil("pito")
+    cProfile.run('to_profile()', sort=2)
+

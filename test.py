@@ -1,5 +1,4 @@
 from rsb.script import Script
-
 class MyScript(Script):
     def setup(self):
         pass
@@ -7,5 +6,5 @@ class MyScript(Script):
     def step(self):
         pass
     
-r = MyScript("pito", (10,10), (5,5))
+r = MyScript("pito", (8,8), (4,4))
 r.run()
