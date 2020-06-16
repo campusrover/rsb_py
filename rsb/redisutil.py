@@ -31,6 +31,8 @@ class RedisUtil(object):
         while True:
             # self.redishandle.ltrim(self.ns + "/Map", -10, -1)
             raw_bytes = self.redishandle.lrange(self.ns + "/Map", -1, -1)
+            if not raw_bytes:
+                return None
             rez = json.loads(str(raw_bytes[0].decode("utf8")))
             if rez["id"] >= self.last_id:
                 break
@@ -47,7 +49,10 @@ class RedisUtil(object):
         raw_bytes = self.redishandle.get(self.ns + "/Odom")
         odom = json.loads(str(raw_bytes.decode("utf8")))
         raw_bytes = self.redishandle.get(self.ns + "/Lidar")
-        lidar = json.loads(str(raw_bytes.decode("utf8")))
+        if raw_bytes:
+            lidar = json.loads(str(raw_bytes.decode("utf8")))
+        else:
+            lidar = None
         return {"odom": odom, "lidar": lidar}
     
 

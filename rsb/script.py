@@ -8,7 +8,6 @@ import json
 import sys
 import random
 
-
 class Script(object):
     def __init__(self, ns, worldsize, origin):
         self.namespace = ns
@@ -48,6 +47,7 @@ class Script(object):
         pygame.display.update()
 
     def draw_map(self):
+    # todo: Handle case of no maps because no walls
         raw_map = self.rutil.get_next_map()
         world = World()
         world.rebuild(raw_map)
@@ -58,13 +58,8 @@ class Script(object):
 
     def draw_robot(self):
         ri = self.rutil.get_robot_info()
-        self.robot = Robot(
-            ri["odom"]["location"][0],
-            ri["odom"]["location"][0],
-            ri["odom"]["orientation"][2],
-            ri["lidar"],
-            "rsb.robot.png",
-        )
+        self.robot.recompute((ri["odom"]["location"][0],
+            ri["odom"]["location"][1]), ri["odom"]["orientation"][2] )
         self.gr.sprite_location(0, self.robot.location, self.robot.orientation)
         self.gr.draw_all_sprites()
         self.gr.draw_robot(self.robot.location, self.robot.orientation, 0.5)
