@@ -46,14 +46,14 @@ class RedisUtil(object):
         self.last_id = 0
 
     def get_robot_info(self):
+        res = {"odom": None, "lidar": None}
         raw_bytes = self.redishandle.get(self.ns + "/Odom")
-        odom = json.loads(str(raw_bytes.decode("utf8")))
+        if raw_bytes:
+            res["odom"] = json.loads(str(raw_bytes.decode("utf8")))
         raw_bytes = self.redishandle.get(self.ns + "/Lidar")
         if raw_bytes:
-            lidar = json.loads(str(raw_bytes.decode("utf8")))
-        else:
-            lidar = None
-        return {"odom": odom, "lidar": lidar}
+            res["lidar"] = json.loads(str(raw_bytes.decode("utf8")))
+        return res
     
 
 if __name__ == "__main__":

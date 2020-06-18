@@ -47,29 +47,13 @@ class Graphics(object):
 
     def sc_draw_line(self, wall):
         ends = self.scale_line((wall[0], wall[1]), (wall[2], wall[3]))
-        pg.draw.line(self.surface, pg.Color("black"), ends[0], ends[1], 5)
+        pg.draw.line(self.surface, pg.Color("white"), ends[0], ends[1], 5)
 
     def sc_draw_rect(self, rect, color):
         pg.draw.rect(self.surface, color, self.sc_rect(rect))
 
     def scale_line(self, beg, end):
         return [self.sc_point(beg), (self.sc_point(end))]
-
-
-# x = 0
-# scale = 100
-# Ox = 500 
-
-# x * scale + Ox => 500
-
-# x = 1
-# Ox - (x * scale + Ox) - Ox = 100
-
-# x = 2
-# Ox - (x * scale + Ox) - Ox = 100
-
-
-
 
     def sc_point(self, c):
         return (self.origin[0] - c[0] * self.scale, self.origin[1] - c[1] * self.scale)
