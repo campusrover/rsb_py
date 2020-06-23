@@ -7,6 +7,8 @@ from pygame.locals import *
 from rsb.grid import Grid
 from rsb.robot import Robot
 
+BACKGR = pg.Color("grey44")
+
 class Graphics(object):
     def __init__(self):
         pg.init()
@@ -23,7 +25,7 @@ class Graphics(object):
         self.origin = (origin[0] * self.scale, origin[1] * self.scale)
         self.dimensions = (size[0] * self.scale, size[1] * self.scale)
         self.surface = pg.display.set_mode(self.dimensions, DOUBLEBUF)
-        self.background = pg.Color("grey10")
+        self.background = BACKGR
         self.grid = Grid(self.dimensions, self.scale, self.origin, self.surface)
 
     def recompute_gridlines(self):
