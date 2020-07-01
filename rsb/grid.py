@@ -23,7 +23,7 @@ class Grid(object):
         for line in self.gridlines:
             pg.draw.aaline(self.surface, line[4], (line[0], line[1]), (line[2], line[3]))
 
-    def calc_y_gridlines(self):
+    def calc_x_gridlines(self):
         # verical grid lines go from y=0 to y=self.dimensions[1]
         # .. and from x=self.origin[0] +/- scale until they are either below zero or above self.dimensions[0]
         xloops = math.ceil(self.dimensions[0] / self.scale)
@@ -37,16 +37,16 @@ class Grid(object):
                 [-inc + self.origin[0], 0, -inc + self.origin[0], self.dimensions[0], color]
             )
 
-    def calc_x_gridlines(self):
+    def calc_y_gridlines(self):
         # horizontal grid lines go from x=0 to x=self.dimesnions[0]
         # .. and from y=self.origin[1] +/- scale until they are either below zero or above self.dimensions[1]
         xloops = math.ceil(self.dimensions[1] / self.scale)
         for x in range(xloops):
-            ddd = X0_CLR if x == 0 else X_CLR
+            color = X0_CLR if x == 0 else X_CLR
             inc = x * self.scale
             self.gridlines.append(
-                [0, inc + self.origin[1], self.dimensions[0], inc + self.origin[1], ddd]
+                [0, inc + self.origin[1], self.dimensions[0], inc + self.origin[1], color]
             )
             self.gridlines.append(
-                [0, -inc + self.origin[1], self.dimensions[1], -inc + self.origin[1], ddd]
+                [0, -inc + self.origin[1], self.dimensions[1], -inc + self.origin[1], color]
             )

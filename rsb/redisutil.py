@@ -30,10 +30,10 @@ class RedisUtil(object):
     def get_next_map(self):
         while True:
             # self.redishandle.ltrim(self.ns + "/Map", -10, -1)
-            raw_bytes = self.redishandle.lrange(self.ns + "/Map", -1, -1)
+            raw_bytes = self.redishandle.lindex(self.ns + "/Map", -1)
             if not raw_bytes:
                 return None
-            rez = json.loads(str(raw_bytes[0].decode("utf8")))
+            rez = json.loads(str(raw_bytes.decode("utf8")))
             if rez["id"] >= self.last_id:
                 break
             print(f"dumping {rez['id']}")

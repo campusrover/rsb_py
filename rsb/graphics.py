@@ -31,12 +31,13 @@ class Graphics(object):
     def recompute_gridlines(self):
         self.grid.recompute()
 
-    def update_graphics(self):
-        for event in pg.event.get():
-            if event.type == pg.QUIT:
-                pg.quit()
-                sys.exit()
-        pg.display.update()
+    # def update_graphics(self):
+    #     for event in pg.event.get():
+    #         if event.type == pg.QUIT:
+    #             pg.quit()
+    #             sys.exit()
+    #     #pg.display.update()
+    #     pg.display.flip()
 
     def draw_background(self):
         self.surface.fill(self.background)
@@ -58,14 +59,15 @@ class Graphics(object):
         return [self.sc_point(beg), (self.sc_point(end))]
 
     def sc_point(self, c):
-        return (self.origin[0] - c[0] * self.scale, self.origin[1] - c[1] * self.scale)
+        return (self.origin[0] + c[0] * self.scale, self.origin[1] - c[1] * self.scale)
 
     def sc_rect(self, r):
         return Rect(self.sc_point((r[0], self.sc_point(r[1])), (r[1], r[2])))
 
     def sc_rotate_point(self, point_origin, angle, length):
-        x = point_origin[0] + math.cos(math.radians(-angle)) * length
-        y = point_origin[1] + math.sin(math.radians(-angle)) * length
+        angle  = -angle + 90
+        x = point_origin[0] + math.cos(math.radians(angle)) * length
+        y = point_origin[1] + math.sin(math.radians(angle)) * length
         return (x,y)
 
     def draw_angle_line(self, line_origin, length, angle):
@@ -87,7 +89,6 @@ class Graphics(object):
         if len(self.all_sprites) == 0:
             self.all_sprites.add(Sprite(location))
         else:
-            print(location, orientation)
             self.all_sprites.sprites()[0].pos = location
             self.all_sprites.sprites()[0].angle = orientation
 
@@ -116,7 +117,7 @@ class Sprite(pg.sprite.Sprite):
         """Rotate the image of the sprite around its center."""
         # `rotozoom` usually looks nicer than `rotate`. Pygame's rotation
         # functions return new images and don't modify the originals.
-        self.image = pg.transform.rotozoom(self.orig_image, self.angle, 1)
+        self.image = pg.transform.rotozoom(self.orig_image, self.angle-90, 1)
         # Create a new rect with the center of the old rect.
         self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -143,7 +144,7 @@ if __name__ == "__main__":
         g.draw_robot(loc, angle, 1)
         g.draw_all_sprites()
         pg.display.flip()
-        g.fpsClock.tick(50)
+        g.fpsClock.tick(0.5)
         i += 0.1
         angle += 0.05
 

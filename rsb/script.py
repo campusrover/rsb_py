@@ -7,6 +7,7 @@ import pygame
 import json
 import sys
 import random
+from time import time
 
 
 class Script(object):
@@ -14,18 +15,21 @@ class Script(object):
         self.namespace = ns
         self.worldsize = worldsize
         self.origin = origin
+        self.frames = 0
+        self.start_time = time()
 
     def run(self):
         self.setup()
         self.post_setup()
         while True:
+            self.frames += 1
             self.gr.draw_background()
             self.gr.grid.draw()
             self.step()
             self.draw_map()
             self.draw_robot()
-            self.gr.update_graphics()
-            self.gr.fpsClock.tick(5)
+            self.update_graphics()
+            self.gr.fpsClock.tick(15)
 
     def setup(self):
         pass
@@ -44,8 +48,13 @@ class Script(object):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
+                self.on_exit()
                 sys.exit()
-        pygame.display.update()
+        pygame.display.flip()
+
+    def on_exit(self):
+        print(f"Frame Rate {self.frames/(time()-self.start_time)} per second")
+
 
     def draw_map(self):
         # todo: Handle case of no maps because no walls
