@@ -22,6 +22,7 @@ class Script(object):
         self.setup()
         self.post_setup()
         while True:
+            self.rutil.bulk_update()
             self.frames += 1
             self.gr.draw_background()
             self.gr.grid.draw()
@@ -58,7 +59,8 @@ class Script(object):
 
     def draw_map(self):
         # todo: Handle case of no maps because no walls
-        raw_map = self.rutil.get_next_map()
+        #raw_map = self.rutil.get_next_map()
+        raw_map = self.rutil.map
         world = World()
         world.rebuild(raw_map)
         i = 0
@@ -67,10 +69,11 @@ class Script(object):
             self.gr.sc_draw_line(wall)
 
     def draw_robot(self):
-        ri = self.rutil.get_robot_info()
-        if ri["odom"]:
+        #ri = self.rutil.get_robot_info()
+        odom = self.rutil.odom
+        if odom:
             self.robot.recompute(
-                (ri["odom"]["location"][0], ri["odom"]["location"][1]), ri["odom"]["orientation"][2]
+                (odom["location"][0], odom["location"][1]), odom["orientation"][2]
             )
         self.gr.sprite_location(0, self.robot.location, self.robot.orientation)
         self.gr.draw_all_sprites()

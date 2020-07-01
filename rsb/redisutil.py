@@ -55,6 +55,17 @@ class RedisUtil(object):
             res["lidar"] = json.loads(str(raw_bytes.decode("utf8")))
         return res
     
+    def bulk_update(self):
+        pipe = self.redishandle.pipeline()
+        # get odom
+        pipe.get(self.ns + "/Odom")
+        # get map
+        pipe.lindex(self.ns + "/Map", -1)  
+        # get lidar
+        pipe.get(self.ns + "/Lidar")
+        result = pipe.execute()
+        result = [itm.decode("utf8") if itm else "" for itm in result]
+        self.odom, self.map, self.lidar  = [json.loads(str(itm)) if itm else None for itm in result]
 
 if __name__ == "__main__":
     def to_profile():
@@ -68,6 +79,8 @@ if __name__ == "__main__":
             if oldid != id:
                 print(id)
             oldid = id
-    r = RedisUtil("pito")
-    cProfile.run('to_profile()', sort=2)
+    r = RedisUtil("pito1")
+    #cProfile.run('to_profile()', sort=2)
+    r.bulk_update()
+    print(r.odom, r.map, r.lidar)
 
