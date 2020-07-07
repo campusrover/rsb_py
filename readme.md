@@ -36,4 +36,8 @@ Conceptually there are three pieces here but all are incomplete. When they are m
 
 ### List
 
-1. 
+1. Roomba walk through space with obstacle
+1. Wall Follow
+1. Maze Solver
+
+

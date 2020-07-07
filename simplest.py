@@ -1,4 +1,5 @@
-# This is the simplest possible script using the first model of rsbscript. It should work and we will be building on it.
+# This is the simplest possible script using the first model of rsbscript. 
+# It should work and we will be building on it.
 
 from rsb.script import Script
 class MyScript(Script):
