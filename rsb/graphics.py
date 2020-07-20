@@ -6,6 +6,8 @@ import random as rd
 from pygame.locals import *
 from rsb.grid import Grid
 from rsb.robot import Robot
+from rsb.panel import Panel
+
 
 BACKGR = pg.Color("grey44")
 
@@ -48,9 +50,15 @@ class Graphics(object):
         angle += 90             # 0 degrees is up for us.
         self.draw_angle_line(self.sc_point(robot_origin), length * self.scale, angle)
 
-    def sc_draw_line(self, wall):
+    def draw_panel(self, panel):
+        """
+        provide the panel externally b/c it needs to know namespace
+        """
+        panel.draw(self.surface)
+
+    def sc_draw_line(self, wall, color="white"):
         ends = self.scale_line((wall[0], wall[1]), (wall[2], wall[3]))
-        pg.draw.line(self.surface, pg.Color("white"), ends[0], ends[1], 5)
+        pg.draw.line(self.surface, pg.Color(color), ends[0], ends[1], 5)
 
     def sc_draw_rect(self, rect, color):
         pg.draw.rect(self.surface, color, self.sc_rect(rect))

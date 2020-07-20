@@ -72,6 +72,19 @@ class RedisUtil(object):
                 adjustments += 1
         return adjustments
 
+    def change_key_value(self, keyname, valuestring):
+        """
+        use this to send information to redis
+        """
+        if keyname not in self.keys:
+            return False
+        elif self.key_types[keyname] == "string":
+            self.redishandle.set(self.nskey(keyname), valuestring)
+            return True
+        elif self.key_types[keyname] == "list":
+            self.redishandle.rpush(self.nskey(keyname), valuestring)
+            return True
+
     def clients(self):
         """
         returns a list of namespaces in the redis server

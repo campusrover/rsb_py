@@ -2,12 +2,14 @@ from rsb.redisutil import RedisUtil
 from rsb.world import World
 from rsb.graphics import Graphics
 from rsb.robot import Robot
+from rsb.panel import Panel
 
 import pygame
 import json
 import sys
 import random
 from time import time
+import math
 
 
 class Script(object):
@@ -29,6 +31,9 @@ class Script(object):
             self.step()
             self.draw_map()
             self.draw_robot()
+            self.draw_lidar()
+            self.panel.handle_click()
+            self.gr.draw_panel(self.panel)
             self.update_graphics()
             self.gr.fpsClock.tick(15)
 
@@ -40,6 +45,7 @@ class Script(object):
 
     def post_setup(self):
         self.rutil = RedisUtil(self.namespace)
+        self.panel = Panel(self.namespace)
         self.gr = Graphics()
         self.gr.setup(self.worldsize, self.origin)
         self.gr.recompute_gridlines()
@@ -79,3 +85,26 @@ class Script(object):
         self.gr.draw_all_sprites()
         self.gr.draw_robot(self.robot.location, self.robot.orientation, 0.5)
 
+    def draw_lidar(self, guidelines=False):
+        lidar = self.rutil.lidar
+        if lidar:
+            angle_step = lidar["fov"] / lidar["slices"]
+            rays = []
+            for i, dist in enumerate(lidar["data"]):
+                x = self.robot.location[0] + math.cos(i * angle_step + self.robot.orientation) * dist
+                y = self.robot.location[1] + math.sin(i * angle_step + self.robot.orientation) * dist
+                rays.append([self.robot.location[0], self.robot.location[1], x, y])
+
+            for r in rays:
+                self.gr.sc_draw_line(r, color="purple")
+
+            # For debugging only - draw ines that show the partitions of the slices 
+            if guidelines:
+                slices = []
+                d = max(lidar["data"])
+                for i, dist in enumerate(lidar["data"]):
+                    x = self.robot.location[0] + math.cos(i * angle_step + self.robot.orientation - angle_step/2) * d
+                    y = self.robot.location[1] + math.sin(i * angle_step + self.robot.orientation - angle_step/2) * d
+                    slices.append([self.robot.location[0], self.robot.location[1], x, y])
+                for r in slices:
+                    self.gr.sc_draw_line(r, color="blue")
