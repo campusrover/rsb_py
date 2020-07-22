@@ -24,10 +24,13 @@ Conceptually there are three pieces here but all are incomplete. When they are m
 
 ### List (not prioritized yet)
 
-1. Add a "control panel" next to the map window to include some basic readouts and commands for now, useful for further experimentation. Initially: readout of current odom and control for command_vel. Using that we can more easily see how things are working.
+1. [DONE] Add a "control panel" next to the map window to include some basic readouts and commands for now, useful for further experimentation. Initially: readout of current odom and control for command_vel. Using that we can more easily see how things are working.
 
-1. Add a set if "rays" coming out of the robot to reflect the current /lidar bearings. They will end up looking like sensing whiskers and be longer or shorter to show the distance to the nearest obstacle.
+1. [DONE] Add a set if "rays" coming out of the robot to reflect the current /lidar bearings. They will end up looking like sensing whiskers and be longer or shorter to show the distance to the nearest obstacle.
+    * ![example](./pygame+panel.png)
 
+    * The panel should be intuitive to use: odom info is printed in the top block, cmd controls are available in the middle, and cmd_feedback printout is at the bottom. Command feedback included both code and message, message gets shortened with (...) if it is too long. Buttons aren't labelled, but there is text next to the buttons that will display the name of the last pressed button. commands are sent to movement bridge, so rotating and moving are not possible at the same time. 
+    * lidar rays project from the center of their "slice", not where they actually project from. sometimes lidar rays don't make sense - too short or too long. 
 ### Goals 2
 
 1. Design a better rsb script programming model by using simple problems to validate

@@ -10,8 +10,8 @@ BUTTON_CLR = pg.Color("firebrick")
 BACKGRND = pg.Color("grey75")
 INFO_BG = pg.Color("darkslategray")
 BTN_FNC = {
-    "turn left": ("rotate", -CMD_SCALE), 
-    "turn right": ("rotate", CMD_SCALE), 
+    "turn left": ("rotate", CMD_SCALE), 
+    "turn right": ("rotate", -CMD_SCALE), 
     "stop": ("stop", 0),
     "forward": ("move", CMD_SCALE),
     "reverse": ("move", -CMD_SCALE)
@@ -73,6 +73,11 @@ class Panel(object):
                 info = self.ru.cmd_feedback["code"]
                 text = f.render(info, True, pg.Color("whitesmoke"))
                 surface.blit(text, (CORNER_OFFSET + 10, 450))
+                info = self.ru.cmd_feedback["message"]
+                if len(info) > 25:
+                    info = info[:25] + "..."
+                text = f.render(info, True, pg.Color("whitesmoke"))
+                surface.blit(text, (CORNER_OFFSET + 10, 475))
 
         else:
             pg.draw.rect(surface, BUTTON_CLR, self.buttons[0].rect)
@@ -94,6 +99,8 @@ class Panel(object):
                 return True
             except:
                 return False
+        else:
+            self.current_cmd = ACTION
         return True
 
     def handle_click(self):
