@@ -1,4 +1,6 @@
-# This file presents two ways to 
+# This file presents two ways to acheive roomba functionality using rsb script
+# first is lines 10-51
+# second is lines 55-104
 
 from rsb.script import Script, Conditional_Brain, Frequency_Brain
 from rsb.redisutil import RedisUtil

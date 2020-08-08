@@ -4,17 +4,18 @@ from rsb.redisutil import RedisUtil
 import json
 
 CMD_TIME = 10  # time that CMD's last
-CMD_SCALE = 0.1  # amount that successive 
+LINEAR_CMD_SCALE = 0.05  # amount that successive 
+ANGULAR_CMD_SCALE = 3
 CORNER_OFFSET = 15  # distance panel sits on screen from the top left corner
 BUTTON_CLR = pg.Color("firebrick")
 BACKGRND = pg.Color("grey75")
 INFO_BG = pg.Color("darkslategray")
 BTN_FNC = {
-    "turn left": ("rotate", CMD_SCALE), 
-    "turn right": ("rotate", -CMD_SCALE), 
+    "turn left": ("rotate", ANGULAR_CMD_SCALE), 
+    "turn right": ("rotate", -ANGULAR_CMD_SCALE), 
     "stop": ("stop", 0),
-    "forward": ("move", CMD_SCALE),
-    "reverse": ("move", -CMD_SCALE)
+    "forward": ("move", LINEAR_CMD_SCALE),
+    "reverse": ("move", -LINEAR_CMD_SCALE)
     }
 STOP = json.dumps({"cmd": "stop"})
 ACTION = {"cmd": None, "duration": CMD_TIME, "speed": None}
@@ -109,7 +110,7 @@ class Panel(object):
                 pos = pg.mouse.get_pos()
                 for b in self.buttons:
                     if b.is_pushed(*pos):
-                        self.debug_text = b.name
+                        self.debug_text = b.name + " " + str(self.current_cmd["speed"])
                         if b.name in BTN_FNC.keys():
                             self.send_cmd(b.name)
                         elif b.name == "toggle":
