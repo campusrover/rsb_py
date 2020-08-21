@@ -100,8 +100,8 @@ class Script(object):
                 y = self.robot.location[1] + math.sin(i * angle_step + self.robot.orientation) * dist
                 rays.append([self.robot.location[0], self.robot.location[1], x, y])
 
-            for r in rays:
-                self.gr.sc_draw_line(r, color="purple")
+            for r, c in zip(rays, ["purple", "blue", "green", "yellow", "orange", "red", "white", "black"]):  # temp fix, not extensible for lidar ray values longer than 8
+                self.gr.sc_draw_line(r, color=c)  # more eaily tell which lidar ray associates with which index
 
             # For debugging only - draw ines that show the partitions of the slices 
             if guidelines:
@@ -118,6 +118,7 @@ class Brain_Manager(object):
     def __init__(self, brains=[]):
         self.conditional_brains = []
         self.frequency_brains = []
+        self.else_brain = None
         self.add_brains(*brains)
 
     def add_brain(self, brain):
@@ -128,6 +129,10 @@ class Brain_Manager(object):
         elif type(brain) is Frequency_Brain or issubclass(type(brain), Frequency_Brain):
             heapq.heappush(self.frequency_brains, brain.heap_tuple())
             print("add fbrain")
+            return True
+        elif type(brain) is Else_Brain or issubclass(type(brain), Else_Brain):
+            self.else_brain = brain
+            print("set ebrain")
             return True
         else:
             print("not a brain")
@@ -146,9 +151,9 @@ class Brain_Manager(object):
             fbrain = heapq.heappop(self.frequency_brains)[1]  # get the highest priority freq brain
             used_fbrains = []                                 # a list of used brains that have fired on this pass
             while fbrain.next_fire_time < current_milli_time():
-                fbrain.fire()                                                    # brain does action
-                fbrain.update_time(current_milli_time() + fbrain.time_interval)  # update brain action time
-                used_fbrains.append(fbrain.heap_tuple())                                      # place used brain in used list
+                if fbrain.ffire():                                                   # brain tries to do action
+                    fbrain.update_time(current_milli_time() + fbrain.time_interval)  # update brain action time if action happens (would not happen if state does not match)
+                used_fbrains.append(fbrain.heap_tuple())                             # place used brain in used list
                 try:
                     fbrain = heapq.heappop(self.frequency_brains)[1]             # try to get next brain
                 except:
@@ -156,36 +161,67 @@ class Brain_Manager(object):
                     break
             self.frequency_brains += used_fbrains + ([fbrain.heap_tuple()] if fbrain else [])
             heapq.heapify(self.frequency_brains)
-            
+        
+        any_conds = False
         for b in self.conditional_brains:
-            b.cfire()                    # conditional brains just check condition and fire if they need to
+            if b.cfire():                    # conditional brains just check condition and fire if they need to
+                any_conds = True
 
+        if self.else_brain and not any_conds:
+            self.else_brain.fire()
 
 class Brain(object):
-    def __init__(self, ru, fn=None):
+    # static values shared across all Brains - a "state manager"
+    state = None
+    state_tree = {}
+    def __init__(self, ru: RedisUtil, fn=None, active_state: str=None):
         self.ru = ru
+        self.active_state = active_state
         if fn:
             self.fire = types.MethodType(fn, self)
 
+    def in_active_state(self):
+        return self.active_state == Brain.state or self.active_state == None  # self.active_state = None indicates ability to fire regardless of state
+
+    def can_transition(self):
+        return self.active_state in Brain.state_tree.get(Brain.state, []) or self.active_state == None
+
+    def either_active_or_transition(self):
+        return self.in_active_state() or self.can_transition()
+
 class Frequency_Brain(Brain):
-    def __init__(self, ru, ms, fn=None):
+    def __init__(self, ru, ms, fn=None, active_state=None):
         self.time_interval = ms
         self.next_fire_time = 0
-        super().__init__(ru, fn)
+        super().__init__(ru, fn, active_state)
     
     def update_time(self, t):
         self.next_fire_time = t
+
+    def ffire(self):
+        if self.in_active_state():
+            self.fire()
+            return True
+        else:
+            return False
 
     def heap_tuple(self):
         return (self.next_fire_time, self)
 
 class Conditional_Brain(Brain):
-    def __init__(self, ru, fn=None, cond=None):
+    def __init__(self, ru, fn=None, cond=None, active_state=None):
         if cond:
             self.condition = types.MethodType(cond, self)
-        super().__init__(ru, fn)
+        super().__init__(ru, fn, active_state)
 
-    def cfire(self):
-        if self.condition():
+    def cfire(self, forced=False):
+        tf = self.condition()
+        if tf and self.can_transition() or forced:
             self.fire()
+            Brain.state = self.active_state
+            print(self.active_state)
+        return tf
 
+class Else_Brain(Brain):
+    def __init__(self, ru, fn):
+        super().__init__(ru, fn)
