@@ -107,41 +107,49 @@ r.run()
 # Method #3: using new state tools
 # with new state tools, conditional brains don't have to worry about state outside of defining their active_state in the constructor
 roomba_ru = RedisUtil("Nate", keys={"Cmd": "list", "Lidar": "string", "Cmd_Feedback": "list"})
-Brain.state_tree = {"going": ["stopped"], "stopped": ["going", "turning"], "turning": ["stopped"]}
 
-def gocond(self):
-    try:
+class Status_Brain(Frequency_Brain):
+    def __init__(self):
+        super().__init__(roomba_ru, 500)
+
+    def fire(self):
+        self.ru.bulk_update()
+        Brain.move_state = self.ru.cmd_feedback["code"]
+
+class Go_Brain(Conditional_Brain):
+    def __init__(self):
+        super().__init__(roomba_ru)
+
+    def condition(self):
         return self.ru.lidar["data"][0] > 0.4
-    except:
-        return False
 
-def go(self):
-    cmd = {"cmd": "move", "duration": 10, "speed": 0.1}
-    self.ru.change_key_value("Cmd", json.dumps(cmd))
-    print("going")
+    def fire(self):
+        cmd = {"cmd": "move", "duration": 10, "speed": 0.1, "name": "go"}
+        self.add_cmd(cmd, override=self.seizing)
 
-def turncond(self):
-    try:
+    def control_cond(self):
+        return self.condition()
+
+
+class Turn_Brain(Conditional_Brain):
+    def __init__(self):
+        super().__init__(roomba_ru)
+
+    def condition(self):
         return self.ru.lidar["data"][0] <= 0.4
-    except:
-        return False
 
-def turn(self):
-    cmd = {"cmd": "rotate", "duration": 10, "speed": 12}  # need to remember that rotate speed takes deg/s #* (random.sample([1,-1], 1)[0])
-    self.ru.change_key_value("Cmd", json.dumps(cmd))
-    print("turning")
+    def fire(self):
+        cmd = {"cmd": "rotate", "duration": 10, "speed": 12, "name": "turn"}
+        self.add_cmd(cmd, override=self.seizing)
 
-def status(self):
-    self.ru.bulk_update()
-    #print(self.ru.__dict__)
-    print(self.next_fire_time)
-    if self.ru.cmd_feedback:
-        if self.ru.cmd_feedback["code"] != "APPROVED":
-            Brain.state = "stopped"
+    def control_cond(self):
+        return self.condition()
 
-gobrain = Conditional_Brain(roomba_ru, go, gocond, "going")  # this brain sends a move forward command if there is open space ahead (lidar[0])
-turnbrain = Conditional_Brain(roomba_ru, turn, turncond, "turning")  # this brain turns if gobrain can't go
-statbrain = Frequency_Brain(roomba_ru, 1000, status)  # this brain manages the other two, updates the shared redisUtil @1hz, and cleans the has_task global var
+sb = Status_Brain()
+gb = Go_Brain()
+tb = Turn_Brain()
 
-r = Script("Nate", (10,10), (5,5), brains=[gobrain, turnbrain, statbrain])
+Brain.control_map = {-1: [tb.uuid, gb.uuid], tb.uuid: [gb.uuid], gb.uuid: [tb.uuid]}  # this says either brain can seize from the other or from no control
+
+r = Script("Nate", (10,10), (5,5), brains=[gb, tb, sb])
 r.run()

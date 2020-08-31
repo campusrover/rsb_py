@@ -12,6 +12,7 @@ from time import time
 import math
 import heapq
 import types
+import uuid
 
 current_milli_time = lambda: int(round(time() * 1000))  # credit: https://stackoverflow.com/questions/5998245/get-current-time-in-milliseconds-in-python
 
@@ -172,56 +173,102 @@ class Brain_Manager(object):
 
 class Brain(object):
     # static values shared across all Brains - a "state manager"
-    state = None
-    state_tree = {}
-    def __init__(self, ru: RedisUtil, fn=None, active_state: str=None):
+    move_state = None  # just whatever the value of Cmd_Feedback is
+    control_map = {}  # subsumption structure
+    controller = -1  # uuid of the brain in control. -1 represents no brain in control
+    command_queue = []  # list of cmds to send to Cmd key
+    curr_cmd_timeout = 0  # when the most recent command expires
+    def __init__(self, ru: RedisUtil, fn=None):
         self.ru = ru
-        self.active_state = active_state
+        self.uuid = uuid.uuid4().int  # each brain gets a uuid 
+        self.seizing = False  # a flag that might be useful when using the override flag in self.add_cmd
         if fn:
             self.fire = types.MethodType(fn, self)
 
-    def in_active_state(self):
-        return self.active_state == Brain.state or self.active_state == None  # self.active_state = None indicates ability to fire regardless of state
+    def is_in_control(self):
+        return Brain.controller == self.uuid
 
-    def can_transition(self):
-        return self.active_state in Brain.state_tree.get(Brain.state, []) or self.active_state == None
+    def control_cond(self):
+        """
+        define in subclasses
+        """
+        return True
 
-    def either_active_or_transition(self):
-        return self.in_active_state() or self.can_transition()
+    def seize_control(self):
+        """
+        tries to forcefully take control
+        """
+        if self.control_cond() and self.uuid in Brain.control_map.get(Brain.controller, []):
+            Brain.controller = self.uuid
+            return True
+        else:
+            return False
+
+    def relinquish_control(self):
+        """
+        voluntarily give up control
+        """
+        if self.is_in_control():
+            Brain.controller = -1
+            return True
+        else:
+            return False
+
+    def add_cmd(self, cmd, override: bool=False):
+        c = json.dumps(cmd)
+        t = cmd["duration"]
+        if (Brain.move_state != "APPROVED" and time() >= Brain.curr_cmd_timeout) or override:  # override if sending a "stop" cmd followed by something else
+            if override:
+                Brain.command_queue.append(json.dumps({"cmd": "stop"}))  # send a stop on override
+            Brain.command_queue.append(c)
+            Brain.curr_cmd_timeout = t + time() 
+            print(f"added {cmd.get('name', 'unnamed')} cmd, override:{override}")
+            return True
+        else:
+            return False
+    
+    def do_cmds(self):
+        while Brain.command_queue:
+            self.ru.change_key_value("Cmd", Brain.command_queue.pop())
 
 class Frequency_Brain(Brain):
-    def __init__(self, ru, ms, fn=None, active_state=None):
+    def __init__(self, ru: RedisUtil, ms: int, fn=None, requires_control: bool=False):
         self.time_interval = ms
         self.next_fire_time = 0
-        super().__init__(ru, fn, active_state)
+        self.req_control = requires_control
+        super().__init__(ru, fn)
     
     def update_time(self, t):
         self.next_fire_time = t
 
     def ffire(self):
-        if self.in_active_state():
+        self.seizing = self.seize_control()
+        if self.is_in_control() or not self.req_control:  # frequency brains might not require control
             self.fire()
             return True
         else:
             return False
+        self.do_cmds()
 
     def heap_tuple(self):
         return (self.next_fire_time, self)
 
 class Conditional_Brain(Brain):
-    def __init__(self, ru, fn=None, cond=None, active_state=None):
+    def __init__(self, ru: RedisUtil, fn=None, cond=None):
         if cond:
             self.condition = types.MethodType(cond, self)
-        super().__init__(ru, fn, active_state)
+        super().__init__(ru, fn)
 
-    def cfire(self, forced=False):
+    def cfire(self):
+        self.seizing = self.seize_control()
         tf = self.condition()
-        if tf and self.can_transition() or forced:
+        if tf and self.is_in_control():
             self.fire()
-            Brain.state = self.active_state
-            print(self.active_state)
+        else:
+            self.relinquish_control()
+        self.do_cmds()
         return tf
 
 class Else_Brain(Brain):
-    def __init__(self, ru, fn):
+    def __init__(self, ru: RedisUtil, fn):
         super().__init__(ru, fn)
