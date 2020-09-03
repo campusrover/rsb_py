@@ -125,15 +125,15 @@ class Brain_Manager(object):
     def add_brain(self, brain):
         if type(brain) is Conditional_Brain or issubclass(type(brain), Conditional_Brain):
             self.conditional_brains.append(brain)
-            print("add cbrain")
+            print(f"add cbrain {brain.uuid}")
             return True
         elif type(brain) is Frequency_Brain or issubclass(type(brain), Frequency_Brain):
             heapq.heappush(self.frequency_brains, brain.heap_tuple())
-            print("add fbrain")
+            print(f"add fbrain {brain.uuid}")
             return True
         elif type(brain) is Else_Brain or issubclass(type(brain), Else_Brain):
             self.else_brain = brain
-            print("set ebrain")
+            print("set ebrain ")
             return True
         else:
             print("not a brain")
@@ -215,9 +215,16 @@ class Brain(object):
             return False
 
     def add_cmd(self, cmd, override: bool=False):
+        """
+        adds a cmd (passed in dict form) to a command queue to be executed soon. 
+
+        cmd will not be added if another command is in progress, unless override=true
+
+        Set override to true to precede cmd with a stop command
+        """
         c = json.dumps(cmd)
         t = cmd["duration"]
-        if (Brain.move_state != "APPROVED" and time() >= Brain.curr_cmd_timeout) or override:  # override if sending a "stop" cmd followed by something else
+        if (Brain.move_state != "APPROVED" and time() >= Brain.curr_cmd_timeout) or override: 
             if override:
                 Brain.command_queue.append(json.dumps({"cmd": "stop"}))  # send a stop on override
             Brain.command_queue.append(c)
@@ -226,6 +233,20 @@ class Brain(object):
             return True
         else:
             return False
+
+    def add_cmds(self, *cmds, override: bool=False):
+        t = sum(c['duration'] for c in cmds)
+        if (Brain.move_state != "APPROVED" and time() >= Brain.curr_cmd_timeout) or override: 
+            if override:
+                Brain.command_queue.append(json.dumps({"cmd": "stop"}))  # send a stop on override
+            for c in cmds: 
+                Brain.command_queue.append(json.dumps(c))
+                print(f"added {c.get('name', 'unnamed')} cmd, override:{override}")
+            Brain.curr_cmd_timeout = t + time() 
+            return True
+        else:
+            return False
+
     
     def do_cmds(self):
         while Brain.command_queue:

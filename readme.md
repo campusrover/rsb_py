@@ -34,13 +34,14 @@ Conceptually there are three pieces here but all are incomplete. When they are m
 ### Goals 2
 
 1. Design a better rsb script programming model by using simple problems to validate
+    * incomplete - see rsb_py/brain_doc.md for info on progress
 
 1. Create a rich demo of several rsbscript programs
 
 ### List
 
-1. Roomba walk through space with obstacle
-1. Wall Follow
+1. Roomba walk through space with obstacle **complete** see roombascript.py
+1. Wall Follow  **incomplete** see wallfollow2.py
 1. Maze Solver
 
 
